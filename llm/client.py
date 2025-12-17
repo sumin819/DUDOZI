@@ -30,7 +30,7 @@ def call_gpt41_mini(system_prompt: str, user_text: str, image_url: str) -> str:
     }
 
     # timeout -> 서버가 멈추는 상황 방지
-    r = requests.post(GMS_API_URL, headers=headers, json=payload, timeout=30)
+    r = requests.post(GMS_API_URL, headers=headers, json=payload, timeout=60)
     # r.raise_for_status()
     if r.status_code >= 400:
         raise RuntimeError(f"GMS error {r.status_code}: {r.text}")
