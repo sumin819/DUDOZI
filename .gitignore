@@ -1,3 +1,11 @@
-firebase-adminsdk.json
-__pycache__
+# 제외할 폴더
+dataset/
+071.시설 작물 질병 진단/
+
+# 공통 무시
+__pycache__/
 .env
+*.log
+firebase-adminsdk.json
+GUI/.qtcreator
+Python_3_10_11venv/
