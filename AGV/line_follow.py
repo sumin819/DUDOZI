@@ -5,7 +5,7 @@ class LineFollower:
     def __init__(
         self,
         speed_gain=0.15,
-        steering_gain=0.12,
+        steering_gain=0.15,
         steering_dgain=0.0,
         steering_bias=0.0,
     ):

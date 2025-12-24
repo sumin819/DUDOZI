@@ -1,6 +1,7 @@
 # 제외할 폴더
 dataset/
 071.시설 작물 질병 진단/
+.ipynb_checkpoints/
 
 # 공통 무시
 __pycache__/

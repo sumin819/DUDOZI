@@ -13,7 +13,7 @@ from PySide6.QtCore import QEvent
 
 from ui_form import Ui_MainWindow
 from api.sidebar import on_toggle_system, send_agv_start, send_agv_pause
-from api.camera import send_move, update_camera, start_camera_stream, stop_camera_stream
+from api.camera import send_move, update_camera_frame, start_camera_stream, stop_camera_stream
 from api.analysis import fetch_task_list, get_latest_cycle_id
 from api.history import fetch_agv_history
 from widgets.analysis_widget import create_analysis_card, clear_layout, format_cycle_id
@@ -31,6 +31,7 @@ DEFAULT_CYCLE_ID = "2025_12_17_1936"
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setWindowTitle("DUDOZI")
 
         # ================================
         # UI 로드
@@ -155,14 +156,12 @@ class MainWindow(QMainWindow):
         self.ui.toggleSystem.setChecked(True)
         self.ui.toggleSystem.setText("OFF")
         self.ui.lblAgvState.setText("SYSTEM: RUNNING")
+        self.ui.cameraView.setText("SYSTEM: RUNNING\nEnter Start Button")
 
         self.ui.btnStart.setEnabled(True)
         self.unlock_controls()
 
         self.unlock_controls()
-
-        start_camera_stream(self)
-        self.cam_timer.start(33)
 
         self.ui.refreshBtn.setEnabled(True)
         self.ui.refreshHistoryBtn.setEnabled(True)
@@ -215,26 +214,25 @@ class MainWindow(QMainWindow):
             self.start_mission()
 
     def start_mission(self):
-        ok = send_agv_start(
-            agv_id=AGV_ID,
-        )
-
+        ok = send_agv_start(agv_id=AGV_ID)
         if not ok:
             print("[ERROR] Mission start failed")
             return
 
-        # GUI는 상태만 관리
         self.mission_state = "RUNNING"
 
         self.ui.btnStart.setText("STOP")
         self.ui.lblAgvState.setText("SYSTEM: RUNNING")
 
+        # MJPEG 스트림 시작 (스레드)
+        start_camera_stream(self)
+
         print("[MISSION] Mission started")
+
 
 
     def pause_mission(self):
         ok = send_agv_pause(AGV_ID)
-
         if not ok:
             print("Mission pause failed")
             return

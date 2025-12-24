@@ -51,6 +51,6 @@ def send_agv_pause(agv_id):
             timeout=3
         )
         return res.status_code == 200
-    except Exception as e:
-        print("Pause error:", e)
+    except Exception:
+        print("[ERROR] Pause request failed")
         return False
