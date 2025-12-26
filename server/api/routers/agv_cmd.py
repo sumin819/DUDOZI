@@ -7,7 +7,7 @@ from services.agv_service import fetch_task_list, is_agv_running
 
 router = APIRouter(prefix="/agv", tags=["AGV Command (MQTT)"])
 
-MQTT_HOST = os.getenv("MQTT_HOST", "172.20.10.9")
+MQTT_HOST = os.getenv("MQTT_HOST", "172.20.10.6")
 MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
 
 def mqtt_publish(topic: str, payload: dict, qos: int = 1):

@@ -1,7 +1,9 @@
 # api/analysis.py
 import requests
 
-SERVER_URL = "http://127.0.0.1:8000"
+# SERVER_URL = "http://127.0.0.1:8000"
+SERVER_URL = "http://172.20.10.6:8888"
+
 
 def get_latest_cycle_id():
     """서버에서 가장 최근의 cycle_id를 가져옴"""
