@@ -67,6 +67,12 @@ AGV는 농장을 순찰하며 이미지를 수집하고, AI 모델(YOLO + LLM)�
 
 <br>
 
+## 🖥️ GUI 화면
+
+![GUI](gui.png)
+
+<br>
+
 ## 🚀 기술 스택
 
 - Edge Device: Jetson Nano / Webcam
