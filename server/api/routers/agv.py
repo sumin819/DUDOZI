@@ -8,19 +8,36 @@ from .agv_cmd import mqtt_publish
 router = APIRouter(prefix="/agv", tags=["AGV Management"])
 
 # =================================
-# 시스템 start stop
+# 시스템 on off 
 # =================================
 @router.post("/run")
 def set_run_state(agv_id: str, running: bool):
     """
-    START / STOP 제어
+    SYSTEM ON / OFF 제어 (카메라, 스트림)
     """
-    return set_agv_run_state(agv_id, running)
+    # 1️⃣ 서버 내부 상태 저장
+    result = set_agv_run_state(agv_id, running)
+
+    # 2️⃣ MQTT publish
+    topic = f"agv/{agv_id}/run"
+    payload = {
+        "agv_id": agv_id,
+        "running": running
+    }
+
+    mqtt_publish(topic, payload, qos=1)
+
+    return {
+        "status": "sent",
+        "agv_id": agv_id,
+        "running": running,
+        "topic": topic
+    }
+
 
 @router.get("/run")
 def get_run_state(agv_id: str):
     return get_agv_run_state(agv_id)
-
 
 # ===============================
 # agv 움직익 하기 
@@ -165,11 +182,16 @@ def start_agv(agv_id: str = "AGV1"):
 
 @router.post("/pause")
 def pause_mission(agv_id: str = "AGV1"):
-    """
-    AGV 작업 일시 정지
-    """
-    # MQTT 전송부 (주석 처리)
-    # mqtt.publish(f"agv/{agv_id}/cmd", {"action": "pause"})
-    
-    print(f"⚠️ [AGV PAUSE] agv={agv_id} 작업 일시 정지")
-    return {"status": "success", "message": "Paused"}
+
+    topic = f"agv/{agv_id}/cmd"
+    payload = {
+        "type": "pause"
+    }
+
+    mqtt_publish(topic, payload, qos=1)
+
+    return {
+        "status": "sent",
+        "agv_id": agv_id,
+        "topic": topic
+    }

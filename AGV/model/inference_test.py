@@ -7,8 +7,8 @@ import os
 # -----------------------------
 # 서버 주소 (팀장 PC IP로 수정!)
 # -----------------------------
-# SERVER_URL = "http://172.20.10.9:8000/agv/upload_observation"
-SERVER_URL = "http://127.0.0.1:8000/agv/upload_observation"
+SERVER_URL = "http://172.20.10.6:8888/agv/upload_observation"
+# SERVER_URL = "http://127.0.0.1:8000/agv/upload_observation"
 
 
 # -----------------------------
@@ -24,7 +24,7 @@ model = YOLO(os.path.join(BASE_DIR, "best.pt"))
 # -----------------------------
 # 테스트 이미지 목록
 # -----------------------------
-nodes = ["green", "purple", "blue", "orange"]
+nodes = ["green", "purple", "blue", "red"]
 
 cycle_id = datetime.now().strftime("%Y_%m_%d_%H%M")
 agv_id = "AGV1"

@@ -1,7 +1,9 @@
 # api/history.py
 import requests
 
-SERVER_URL = "http://127.0.0.1:8000"
+# SERVER_URL = "http://127.0.0.1:8000"
+SERVER_URL = "http://172.20.10.6:8888"
+
 
 def fetch_agv_history(cycle_id: str = None):
     """

@@ -1,6 +1,8 @@
 import requests
 
-SERVER_URL = "http://localhost:8000"
+# SERVER_URL = "http://127.0.0.1:8000"
+SERVER_URL = "http://172.20.10.6:8888"
+
 AGV_ID = "AGV1"
 
 def on_toggle_system(self):
@@ -28,17 +30,16 @@ def on_toggle_system(self):
         self.ui.toggleSystem.setChecked(not will_run)
 
 
-def send_agv_start(cycle_id, agv_id, timestamp):
-    payload = {
-        "cycle_id": cycle_id,
-        "agv_id": agv_id,
-        "timestamp": timestamp
-    }
+def send_agv_start(agv_id):
     try:
-        res = requests.post(f"{SERVER_URL}/agv/start", json=payload, timeout=3)
+        res = requests.post(
+            f"{SERVER_URL}/agv/start",
+            params={"agv_id": agv_id},
+            timeout=3
+        )
         return res.status_code == 200
-    except Exception as e:
-        print("Start error:", e)
+    except Exception:
+        print("[ERROR] Failed to send START")
         return False
 
 
@@ -50,6 +51,6 @@ def send_agv_pause(agv_id):
             timeout=3
         )
         return res.status_code == 200
-    except Exception as e:
-        print("Pause error:", e)
+    except Exception:
+        print("[ERROR] Pause request failed")
         return False

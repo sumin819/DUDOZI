@@ -13,7 +13,7 @@ from PySide6.QtCore import QEvent
 
 from ui_form import Ui_MainWindow
 from api.sidebar import on_toggle_system, send_agv_start, send_agv_pause
-from api.camera import send_move, update_camera
+from api.camera import send_move, update_camera_frame, start_camera_stream, stop_camera_stream
 from api.analysis import fetch_task_list, get_latest_cycle_id
 from api.history import fetch_agv_history
 from widgets.analysis_widget import create_analysis_card, clear_layout, format_cycle_id
@@ -31,6 +31,7 @@ DEFAULT_CYCLE_ID = "2025_12_17_1936"
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setWindowTitle("DUDOZI")
 
         # ================================
         # UI 로드
@@ -58,11 +59,9 @@ class MainWindow(QMainWindow):
         # ================================
         # 카메라 / 타이머
         # ================================
-        self.cap = cv2.VideoCapture(0)
+        self.cap = None
         self.cam_timer = QTimer(self)
         self.cam_timer.timeout.connect(lambda: update_camera(self))
-        if not self.cap.isOpened():
-            self.cap = None
 
         # ================================
         # 서버 상태 동기화
@@ -157,14 +156,12 @@ class MainWindow(QMainWindow):
         self.ui.toggleSystem.setChecked(True)
         self.ui.toggleSystem.setText("OFF")
         self.ui.lblAgvState.setText("SYSTEM: RUNNING")
+        self.ui.cameraView.setText("SYSTEM: RUNNING\nEnter Start Button")
 
         self.ui.btnStart.setEnabled(True)
         self.unlock_controls()
 
         self.unlock_controls()
-
-        if self.cap:
-            self.cam_timer.start(33)
 
         self.ui.refreshBtn.setEnabled(True)
         self.ui.refreshHistoryBtn.setEnabled(True)
@@ -186,7 +183,9 @@ class MainWindow(QMainWindow):
         self.lock_controls()
 
         if self.cam_timer.isActive():
-            self.cam_timer.stop()
+                self.cam_timer.stop()
+
+        stop_camera_stream(self)
 
         self.ui.cameraView.setText("SYSTEM OFF")
         self.ui.cameraView.setAlignment(Qt.AlignCenter)
@@ -206,53 +205,43 @@ class MainWindow(QMainWindow):
             return  # SYSTEM OFF
 
         if self.mission_state == "IDLE":
-            self.start_mission(resume=False)
+            self.start_mission()
 
         elif self.mission_state == "RUNNING":
             self.pause_mission()
 
         elif self.mission_state == "PAUSED":
-            self.start_mission(resume=True)
+            self.start_mission()
 
-    def start_mission(self, resume=False):
-        cycle_id = (
-            self.current_cycle_id
-            if resume
-            else datetime.now().strftime("%Y_%m_%d_%H%M")
-        )
-
-        timestamp = datetime.now(TIMEZONE).strftime("%Y-%m-%d %H:%M:%S")
-
-        ok = send_agv_start(
-            cycle_id=cycle_id,
-            agv_id=AGV_ID,
-            timestamp=timestamp
-        )
-
+    def start_mission(self):
+        ok = send_agv_start(agv_id=AGV_ID)
         if not ok:
-            print("❌ Mission start/resume failed")
+            print("[ERROR] Mission start failed")
             return
 
-        self.current_cycle_id = cycle_id
         self.mission_state = "RUNNING"
 
         self.ui.btnStart.setText("STOP")
         self.ui.lblAgvState.setText("SYSTEM: RUNNING")
 
-        print("▶ Mission resumed" if resume else "🚀 Mission started")
+        # MJPEG 스트림 시작 (스레드)
+        start_camera_stream(self)
+
+        print("[MISSION] Mission started")
+
+
 
     def pause_mission(self):
         ok = send_agv_pause(AGV_ID)
-
         if not ok:
-            print("❌ Mission pause failed")
+            print("Mission pause failed")
             return
 
         self.mission_state = "PAUSED"
         self.ui.btnStart.setText("START")
         self.ui.lblAgvState.setText("SYSTEM: PAUSED")
 
-        print("⏸ Mission paused")
+        print("Mission paused")
 
 
     # ==================================================
@@ -269,11 +258,11 @@ class MainWindow(QMainWindow):
             clear_layout(layout)
 
             # ----------------------------
-            # 🔥 분석 시간 라벨 (한 번만)
+            # 분석 시간 라벨 (한 번만)
             # ----------------------------
             cycle_time = format_cycle_id(cycle_id)
 
-            time_label = QLabel(f"⏱ Analysis Time : {cycle_time}")
+            time_label = QLabel(f"Analysis Time : {cycle_time}")
             time_label.setStyleSheet("""
                 color: #AAAAAA;
                 font-size: 10px;
